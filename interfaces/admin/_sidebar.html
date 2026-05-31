@@ -1,0 +1,68 @@
+{% load avatar_tags %}
+<aside data-sc-sidebar class="fixed top-4 left-4 bottom-4 z-50 flex w-72 flex-col overflow-hidden rounded-[28px] border border-white/20 bg-[#112D4E]/58 text-white shadow-[0_30px_70px_rgba(0,0,0,.45)] backdrop-blur-2xl">
+    <div class="absolute inset-0 bg-[radial-gradient(130%_90%_at_15%_12%,rgba(125,211,252,.22),transparent_58%),radial-gradient(120%_90%_at_85%_86%,rgba(30,80,140,.2),transparent_60%)]"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,45,78,.45)_0%,rgba(17,45,78,.22)_100%)]"></div>
+    <div class="relative flex h-16 items-center gap-2 px-6 border-b border-white/10">
+        <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-400 via-violet-500 to-purple-600 flex items-center justify-center font-extrabold text-white shadow-[0_12px_28px_rgba(108,65,255,.45)]">7</div>
+        <div>
+            <span class="text-xl font-semibold tracking-tight">Seven<span class="text-blue-400">.AI</span></span>
+            <span class="block text-xs text-slate-300/70">Console Admin</span>
+        </div>
+    </div>
+
+    <nav class="relative flex-1 space-y-1 px-4 py-6">
+        <a href="{% url 'dashboard_admin' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'apercu' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            Aperçu
+        </a>
+        <a href="{% url 'admin_pme' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'pme' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            PME
+        </a>
+        <a href="{% url 'admin_utilisateurs' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'utilisateurs' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            Utilisateurs
+        </a>
+        <a href="{% url 'admin_securite' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'securite' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Sécurité
+        </a>
+        <a href="{% url 'admin_parametres' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'parametres' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            Paramètres
+        </a>
+        <div class="pt-4 mt-4 border-t border-white/15">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium text-slate-300/85 hover:bg-white/8 hover:text-white transition-colors">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Se déconnecter
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="relative border-t border-white/15 p-4">
+        <div class="flex items-center gap-3">
+            <div class="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/20 bg-white/10 flex items-center justify-center">
+                <img
+                    src="{% if profile.photo %}{{ profile.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff{% endif %}"
+                    alt="{{ user.username }}"
+                    class="h-full w-full object-cover"
+                    onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff';"
+                >
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white truncate">{{ user.username }}</p>
+                <p class="text-xs text-slate-300/70">Super Admin</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="relative border-t border-white/15 p-3">
+        <button type="button" data-sc-sidebar-toggle aria-expanded="true" class="w-full flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium text-slate-300/85 hover:bg-white/8 hover:text-white transition-colors">
+            <span data-sc-sidebar-toggle-label>Réduire</span>
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+        </button>
+    </div>
+</aside>

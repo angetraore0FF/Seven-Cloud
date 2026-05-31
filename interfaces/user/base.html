@@ -1,0 +1,233 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>{% block title %}Seven.AI{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        (function () {
+            try {
+                var savedTheme = localStorage.getItem('sc-theme');
+                var theme = savedTheme === 'dark' || savedTheme === 'light'
+                    ? savedTheme
+                    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('sc-dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd',
+                            300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9',
+                            600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e',
+                        },
+                        copper: {
+                            50: '#fff7ed', 100: '#ffedd5', 200: '#fed7aa', 300: '#fdba74',
+                            400: '#fb923c', 500: '#f97316', 600: '#ea580c', 700: '#c2410c',
+                            800: '#9a3412', 900: '#7c2d12',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root{
+            --sc-bg0:#05070e;
+            --sc-bg1:#070a14;
+            --sc-ink:#0b1220;
+            --sc-paper:#ffffff;
+            --sc-line:rgba(15,23,42,.12);
+            --sc-line-strong:rgba(15,23,42,.18);
+            --sc-shadow:0 22px 60px rgba(2,6,23,.18);
+            --sc-shadow-soft:0 10px 25px rgba(2,6,23,.10);
+            --sc-radius:20px;
+        }
+        html, body { height: 100%; }
+        body{
+            color: var(--sc-ink);
+            font-feature-settings: "ss01" 1,"cv11" 1;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        body.sc-dark { color: #dbeafe; }
+        .sc-bg{
+            background:
+                radial-gradient(1200px 700px at 15% -10%, rgba(14,165,233,.30), transparent 58%),
+                radial-gradient(900px 600px at 95% 10%, rgba(249,115,22,.22), transparent 55%),
+                radial-gradient(900px 700px at 40% 105%, rgba(16,185,129,.20), transparent 60%),
+                linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 60%, rgba(248,250,252,1) 100%);
+        }
+        body.sc-dark.sc-bg{
+            background:
+                radial-gradient(1200px 700px at 15% -10%, rgba(14,165,233,.15), transparent 58%),
+                radial-gradient(900px 600px at 95% 10%, rgba(59,130,246,.12), transparent 55%),
+                radial-gradient(900px 700px at 40% 105%, rgba(56,189,248,.1), transparent 60%),
+                linear-gradient(180deg, #0b1220 0%, #0f172a 55%, #111827 100%);
+        }
+        .sc-grid{ position: relative; }
+        .sc-grid:before{
+            content:"";
+            position:absolute; inset:0;
+            background-image:
+                linear-gradient(to right, rgba(15,23,42,.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15,23,42,.05) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: radial-gradient(80% 70% at 55% 25%, rgba(0,0,0,1), rgba(0,0,0,.35) 55%, transparent 85%);
+            pointer-events:none;
+            opacity:.55;
+        }
+        body.sc-dark .sc-grid:before{
+            background-image:
+                linear-gradient(to right, rgba(148,163,184,.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(148,163,184,.06) 1px, transparent 1px);
+            opacity:.28;
+        }
+        .sc-shell{ background: rgba(255,255,255,.55); backdrop-filter: blur(14px); }
+        body.sc-dark .sc-shell{ background: rgba(15,23,42,.62); }
+        .sc-panel{
+            background: rgba(255,255,255,.78);
+            border: 1px solid var(--sc-line);
+            border-radius: var(--sc-radius);
+            box-shadow: var(--sc-shadow-soft);
+        }
+        .sc-panel--solid{ background: rgba(255,255,255,.92); }
+        body.sc-dark .sc-panel{
+            background: rgba(15,23,42,.55);
+            border-color: rgba(148,163,184,.18);
+            box-shadow: 0 18px 45px rgba(2,6,23,.45);
+        }
+        body.sc-dark .sc-panel--solid{ background: rgba(15,23,42,.72); }
+        .sc-header{
+            border-bottom: 1px solid rgba(15,23,42,.10);
+            box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+        }
+        body.sc-dark .sc-header{
+            border-bottom: 1px solid rgba(148,163,184,.2);
+            box-shadow: none;
+        }
+        .sc-header:after{
+            content:"";
+            position:absolute; left:0; right:0; bottom:-1px; height:2px;
+            background: linear-gradient(90deg, rgba(14,165,233,.0), rgba(14,165,233,.55), rgba(249,115,22,.45), rgba(16,185,129,.35), rgba(14,165,233,.0));
+            opacity:.9;
+            pointer-events:none;
+        }
+        body.sc-dark .sc-header:after{
+            background: linear-gradient(90deg, rgba(56,189,248,.0), rgba(56,189,248,.5), rgba(59,130,246,.45), rgba(14,165,233,.35), rgba(56,189,248,.0));
+            opacity:.7;
+        }
+        .user-input{
+            width:100%;
+            border-radius: 14px;
+            border: 1px solid var(--sc-line-strong);
+            background: rgba(255,255,255,.85);
+            padding: .65rem .85rem;
+            font-size: .875rem;
+            color: #0b1220;
+            box-shadow: 0 1px 0 rgba(255,255,255,.7) inset;
+            transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease, background-color .2s ease;
+        }
+        .user-input:focus{
+            outline:none;
+            background: rgba(255,255,255,.96);
+            border-color: rgba(14,165,233,.55);
+            box-shadow: 0 0 0 4px rgba(14,165,233,.14), 0 1px 0 rgba(255,255,255,.7) inset;
+        }
+        .sc-btn{
+            border-radius: 14px;
+            border: 1px solid rgba(2,6,23,.08);
+            background: rgba(255,255,255,.85);
+            box-shadow: 0 12px 30px rgba(2,6,23,.10);
+        }
+        .sc-btn--primary{
+            border: 1px solid rgba(14,165,233,.22);
+            background: linear-gradient(135deg, rgba(14,165,233,.95), rgba(16,185,129,.90));
+            color: white;
+            box-shadow: 0 18px 45px rgba(14,165,233,.22);
+        }
+        .sc-btn--primary:hover{ filter: saturate(1.05) contrast(1.02); transform: translateY(-1px); }
+        body.sc-dark header h1 { color: #e2e8f0 !important; }
+        body.sc-dark header p { color: #94a3b8 !important; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full sc-bg">
+    <div class="flex h-full sc-grid">
+        {% include 'user/_sidebar.html' %}
+        <div id="sc-main" class="flex-1 min-w-0">
+            <header class="sc-shell sc-header sticky top-0 z-40 relative">
+                <div class="flex h-16 items-center justify-between px-8">
+                    <div class="flex items-center gap-3">
+                        {% include '_sidebar_open_button.html' %}
+                        <div>
+                            <h1 class="text-2xl font-bold text-slate-900">{% block page_title %}Tableau de bord{% endblock %}</h1>
+                            <p class="text-sm text-slate-500">{% block page_subtitle %}Bienvenue, {{ user.first_name|default:user.username }}{% if pme_nom %} — {{ pme_nom }}{% endif %}{% endblock %}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        {% include '_theme_toggle.html' %}
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-xl border border-slate-300/60 bg-white/70 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white transition-colors">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                Déconnexion
+                            </button>
+                        </form>
+                        {% block header_extra %}
+                        {% if is_local_network %}
+                        <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200">
+                            <span class="relative flex h-2.5 w-2.5">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-xs font-medium text-emerald-700">Accès LAN Local</span>
+                        </div>
+                        {% else %}
+                        <div class="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 border border-amber-200">
+                            <span class="relative flex h-2.5 w-2.5 bg-amber-500 rounded-full"></span>
+                            <span class="text-xs font-medium text-amber-700">Accès Distant</span>
+                        </div>
+                        {% endif %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </header>
+
+            {% if messages %}
+            <div class="px-8 pt-4 space-y-2">
+                {% for message in messages %}
+                <div class="rounded-lg px-4 py-3 text-sm {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-emerald-50 text-emerald-700 border border-emerald-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <main class="p-8">
+                <div class="space-y-8">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+    {% include '_sidebar_layout.html' %}
+    <script>
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) window.location.reload();
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

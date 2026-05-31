@@ -1,0 +1,184 @@
+{% extends 'user/base.html' %}
+{% load avatar_tags %}
+
+{% block title %}Seven.AI - Paramètres{% endblock %}
+{% block page_title %}Paramètres{% endblock %}
+{% block page_subtitle %}Gérez votre compte{% endblock %}
+
+{% block content %}
+<style>
+    .sc-settings-card {
+        border-radius: 1.2rem;
+        border: 1px solid rgba(255, 255, 255, 0.34);
+        background: rgba(255, 255, 255, 0.46);
+        backdrop-filter: blur(18px);
+        box-shadow: 0 24px 55px rgba(2, 6, 23, 0.12);
+    }
+    .sc-settings-title {
+        font-size: 1.16rem;
+        font-weight: 700;
+        color: rgb(15 23 42);
+    }
+    .sc-settings-form input,
+    .sc-settings-form select,
+    .sc-settings-form textarea {
+        width: 100%;
+        border-radius: 0.9rem;
+        border: 1px solid rgba(148, 163, 184, 0.42);
+        background: rgba(255, 255, 255, 0.82);
+        padding: 0.68rem 0.9rem;
+        font-size: 0.92rem;
+        color: rgb(15 23 42);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    }
+    .sc-settings-form input:focus,
+    .sc-settings-form select:focus,
+    .sc-settings-form textarea:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.62);
+        background: rgba(255, 255, 255, 0.96);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14);
+    }
+    body.sc-dark .sc-settings-card {
+        border-color: rgba(148, 163, 184, 0.24);
+        background: rgba(15, 23, 42, 0.52);
+        box-shadow: 0 26px 60px rgba(2, 6, 23, 0.5);
+    }
+    body.sc-dark .sc-settings-title { color: rgb(226 232 240); }
+    body.sc-dark .sc-settings-form label { color: rgb(203 213 225) !important; }
+    body.sc-dark .sc-settings-form input,
+    body.sc-dark .sc-settings-form select,
+    body.sc-dark .sc-settings-form textarea {
+        border-color: rgba(148, 163, 184, 0.26);
+        background: rgba(30, 41, 59, 0.76);
+        color: rgb(226 232 240);
+    }
+    body.sc-dark .sc-settings-form input:focus,
+    body.sc-dark .sc-settings-form select:focus,
+    body.sc-dark .sc-settings-form textarea:focus {
+        border-color: rgba(96, 165, 250, 0.75);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
+</style>
+
+<div class="sc-settings-card px-5 py-4 max-w-2xl">
+    <p class="text-sm text-slate-600"><span class="font-medium text-slate-800">PME :</span>
+        {% if pme_nom %}{{ pme_nom }}{% else %}<span class="text-amber-600">Non assignée — contactez votre administrateur</span>{% endif %}
+    </p>
+    <p class="text-sm text-slate-600 mt-1"><span class="font-medium text-slate-800">Rôle :</span> {{ profile.get_role_display }}</p>
+</div>
+
+<div class="sc-settings-card p-6 max-w-2xl">
+    <h2 class="sc-settings-title mb-4">Photo de profil</h2>
+    <form method="post" enctype="multipart/form-data" class="sc-settings-form flex flex-col sm:flex-row items-center gap-6">
+        {% csrf_token %}
+        <input type="hidden" name="upload_photo" value="1">
+        <div class="relative h-24 w-24 overflow-hidden rounded-2xl ring-2 ring-white/50 bg-slate-200/60 flex items-center justify-center shadow-[0_10px_35px_rgba(2,6,23,.2)]">
+            <img
+                src="{% if profile.photo %}{{ profile.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff&size=256{% endif %}"
+                alt="{{ user.username }}"
+                class="h-full w-full object-cover"
+                onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff&size=256';"
+            >
+        </div>
+        <div class="flex-1 w-full space-y-3">
+            {{ photo_form.photo }}
+            <button type="submit" class="rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-500 hover:to-sky-500 transition-all shadow-[0_12px_30px_rgba(59,130,246,.35)]">Mettre à jour la photo</button>
+        </div>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-2 max-w-5xl">
+    <div class="sc-settings-card p-6">
+        <h2 class="sc-settings-title mb-4">Informations du compte</h2>
+        <form method="post" class="sc-settings-form space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="update_account" value="1">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Nom d'utilisateur</label>
+                {{ account_form.username }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                {{ account_form.email }}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Prénom</label>
+                    {{ account_form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nom</label>
+                    {{ account_form.last_name }}
+                </div>
+            </div>
+            <button type="submit" class="rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-500 hover:to-sky-500 transition-all shadow-[0_12px_30px_rgba(59,130,246,.35)]">Enregistrer</button>
+        </form>
+    </div>
+
+    <div class="sc-settings-card p-6">
+        <h2 class="sc-settings-title mb-4">Profil & service</h2>
+        <form method="post" class="sc-settings-form space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="update_profile" value="1">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Service / département</label>
+                {{ profile_form.service }}
+            </div>
+            <button type="submit" class="rounded-xl bg-slate-900/90 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors shadow-[0_10px_26px_rgba(15,23,42,.35)]">Enregistrer le profil</button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-200">
+            <h2 class="sc-settings-title mb-2">Quota de stockage</h2>
+            {% include 'user/_storage_bars.html' %}
+            <p class="text-sm text-slate-600 mb-4">
+                Pour augmenter votre espace, soumettez une demande à l'administrateur.
+            </p>
+            {% if demande_quota_en_attente %}
+            <div class="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800 mb-4">
+                Demande en attente : passage de {{ demande_quota_en_attente.quota_actuel }} à
+                <strong>{{ demande_quota_en_attente.quota_demande }} Go</strong>
+                ({{ demande_quota_en_attente.date_demande|date:"d/m/Y à H:i" }}).
+            </div>
+            {% else %}
+            <form method="post" class="sc-settings-form space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="demande_quota" value="1">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Quota souhaité (Go)</label>
+                    {{ demande_quota_form.quota_demande }}
+                </div>
+                {{ demande_quota_form.message }}
+                <button type="submit" class="rounded-xl bg-gradient-to-r from-blue-600 to-sky-500 px-4 py-2.5 text-sm font-semibold text-white hover:from-blue-500 hover:to-sky-500 transition-all shadow-[0_12px_30px_rgba(59,130,246,.35)]">
+                    Demander une augmentation
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-200">
+            <h2 class="sc-settings-title mb-2">Mot de passe</h2>
+            <p class="text-sm text-slate-600 mb-4">
+                Pour des raisons de sécurité, vous ne pouvez pas modifier votre mot de passe directement.
+                Envoyez une demande à l'administrateur de la plateforme.
+            </p>
+            {% if demande_en_attente %}
+            <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+                Demande en attente depuis le {{ demande_en_attente.date_demande|date:"d/m/Y à H:i" }}.
+                L'administrateur la traitera prochainement.
+            </div>
+            {% else %}
+            <form method="post" class="sc-settings-form space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="demande_mdp" value="1">
+                {{ demande_form.message }}
+                <button type="submit" class="rounded-xl bg-slate-900/90 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors shadow-[0_10px_26px_rgba(15,23,42,.35)]">
+                    Demander une réinitialisation
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

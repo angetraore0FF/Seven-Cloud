@@ -1,0 +1,246 @@
+{% extends 'admin/base.html' %}
+{% load avatar_tags %}
+
+{% block title %}Seven.AI - Utilisateurs{% endblock %}
+{% block page_title %}Gestion des utilisateurs{% endblock %}
+{% block page_subtitle %}Gérer les comptes utilisateurs par PME{% endblock %}
+
+{% block content %}
+{% if demandes_mdp %}
+<div class="rounded-2xl border border-amber-200 bg-amber-50 shadow-sm p-6 mb-6">
+    <h2 class="text-lg font-semibold text-amber-900 mb-4">Demandes de réinitialisation de mot de passe ({{ demandes_mdp|length }})</h2>
+    <div class="space-y-4">
+        {% for demande in demandes_mdp %}
+        <div class="rounded-xl border border-amber-200 bg-white p-4 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+            <div>
+                <p class="font-medium text-slate-900">{{ demande.user.username }}</p>
+                <p class="text-sm text-slate-600">
+                    {% if demande.user.profile.pme %}PME : {{ demande.user.profile.pme.nom }} · {% endif %}
+                    {{ demande.date_demande|date:"d/m/Y H:i" }}
+                </p>
+                {% if demande.message %}
+                <p class="text-sm text-slate-500 mt-1 italic">« {{ demande.message }} »</p>
+                {% endif %}
+            </div>
+            <form method="post" class="flex flex-wrap items-end gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="demande_id" value="{{ demande.pk }}">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">Nouveau mot de passe</label>
+                    <input type="password" name="nouveau_mot_de_passe" class="admin-input !w-48" placeholder="Optionnel" minlength="8">
+                </div>
+                <button type="submit" name="traiter_demande_mdp" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                    Marquer comme traitée
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if demandes_quota %}
+<div class="rounded-2xl border border-blue-200 bg-blue-50 shadow-sm p-6 mb-6">
+    <h2 class="text-lg font-semibold text-blue-900 mb-4">Demandes d'augmentation de quota ({{ demandes_quota|length }})</h2>
+    <div class="space-y-4">
+        {% for demande in demandes_quota %}
+        <div class="rounded-xl border border-blue-200 bg-white p-4 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+            <div>
+                <p class="font-medium text-slate-900">{{ demande.user.username }}</p>
+                <p class="text-sm text-slate-600">
+                    {% if demande.user.profile.pme %}PME : {{ demande.user.profile.pme.nom }} · {% endif %}
+                    {{ demande.quota_actuel }} Go → <strong>{{ demande.quota_demande }} Go</strong>
+                    · {{ demande.date_demande|date:"d/m/Y H:i" }}
+                </p>
+                {% if demande.message %}
+                <p class="text-sm text-slate-500 mt-1 italic">« {{ demande.message }} »</p>
+                {% endif %}
+            </div>
+            <form method="post" class="flex flex-wrap items-end gap-2">
+                {% csrf_token %}
+                <input type="hidden" name="demande_id" value="{{ demande.pk }}">
+                <div>
+                    <label class="block text-xs text-slate-500 mb-1">Quota accordé (Go)</label>
+                    <input type="number" name="quota_accorde" value="{{ demande.quota_demande }}" min="{{ demande.quota_actuel|add:1 }}" class="admin-input !w-28">
+                </div>
+                <button type="submit" name="traiter_demande_quota" class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                    Approuver
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 mb-6">
+    <form method="get" class="flex flex-wrap items-end gap-4">
+        <div class="min-w-[200px]">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Filtrer par PME</label>
+            <select name="pme" class="admin-input" onchange="this.form.submit()">
+                <option value="">Toutes les PME</option>
+                {% for pme in all_pmes %}
+                <option value="{{ pme.pk }}" {% if pme_filter == pme.pk|stringformat:"s" %}selected{% endif %}>{{ pme.nom }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="min-w-[160px]">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Rôle</label>
+            <select name="role" class="admin-input" onchange="this.form.submit()">
+                <option value="">Tous les rôles</option>
+                <option value="employe" {% if role_filter == 'employe' %}selected{% endif %}>Employé</option>
+                <option value="rh" {% if role_filter == 'rh' %}selected{% endif %}>RH</option>
+                <option value="compta" {% if role_filter == 'compta' %}selected{% endif %}>Comptabilité</option>
+                <option value="invite" {% if role_filter == 'invite' %}selected{% endif %}>Invité</option>
+            </select>
+        </div>
+        <a href="{% url 'admin_utilisateurs' %}" class="text-sm text-slate-500 hover:text-slate-700">Réinitialiser</a>
+    </form>
+</div>
+
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+    <div class="lg:col-span-2 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-slate-900">Utilisateurs ({{ total_users }})</h2>
+            {% if user_edit %}
+            <a href="{% url 'admin_utilisateurs' %}{% if pme_filter %}?pme={{ pme_filter }}{% endif %}" class="text-sm text-blue-600 hover:text-blue-800">+ Nouvel utilisateur</a>
+            {% endif %}
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-white/40">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Photo</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Utilisateur</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">PME</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Rôle</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Quota</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for u in users %}
+                    <tr class="hover:bg-white/40">
+                        <td class="px-6 py-4">{% avatar photo=u.profile.photo name=u.username size="sm" %}</td>
+                        <td class="px-6 py-4">
+                            <p class="text-sm font-medium text-slate-900">{{ u.username }}</p>
+                            <p class="text-xs text-slate-500">{{ u.email }}</p>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600">
+                            {% if u.profile.pme %}{{ u.profile.pme.nom }}{% else %}—{% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-slate-600">{{ u.profile.get_role_display }}</td>
+                        <td class="px-6 py-4 text-sm text-slate-600 min-w-[140px]">
+                            <div class="text-xs mb-1">{{ u.profile.espace_utilise }} / {{ u.profile.quota_stockage }} Go</div>
+                            <div class="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div class="h-full bg-emerald-600 rounded-full" style="width: {{ u.profile.pourcentage_utilise }}%"></div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if u.is_active %}
+                            <span class="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Actif</span>
+                            {% else %}
+                            <span class="inline-flex rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">Inactif</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex justify-end gap-2 flex-wrap">
+                                <a href="{% url 'admin_utilisateurs' %}?edit={{ u.pk }}{% if pme_filter %}&pme={{ pme_filter }}{% endif %}" class="text-sm text-blue-600 hover:underline">Modifier</a>
+                                <form method="post" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ u.pk }}">
+                                    <input type="hidden" name="pme_filter" value="{{ pme_filter }}">
+                                    <button type="submit" name="toggle_active" class="text-sm text-amber-600 hover:underline">
+                                        {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                                    </button>
+                                </form>
+                                <form method="post" class="inline" onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ u.pk }}">
+                                    <button type="submit" name="delete_user" class="text-sm text-red-600 hover:underline">Supprimer</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-sm text-slate-500">Aucun utilisateur trouvé</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+        <h2 class="text-lg font-semibold text-slate-900 mb-4">
+            {% if user_edit %}Modifier l'utilisateur{% else %}Ajouter un utilisateur{% endif %}
+        </h2>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="pme_filter" value="{{ pme_filter }}">
+            {% if user_edit %}
+            <input type="hidden" name="user_id" value="{{ user_edit.pk }}">
+            {% endif %}
+            <div class="flex justify-center">
+                {% if user_edit %}
+                {% avatar photo=user_edit.profile.photo name=user_edit.username size="xl" %}
+                {% else %}
+                {% avatar name="Utilisateur" size="xl" %}
+                {% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Photo de profil</label>
+                {{ form.photo }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Nom d'utilisateur</label>
+                {{ form.username }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                {{ form.email }}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Prénom</label>
+                    {{ form.first_name }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Nom</label>
+                    {{ form.last_name }}
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Mot de passe</label>
+                {{ form.password }}
+                {% if user_edit %}<p class="text-xs text-slate-400 mt-1">Laisser vide pour conserver</p>{% endif %}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">PME</label>
+                {{ form.pme }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Rôle</label>
+                {{ form.role }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Service</label>
+                {{ form.service }}
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Quota (Go)</label>
+                {{ form.quota_stockage }}
+            </div>
+            <div class="flex items-center gap-2">
+                {{ form.is_active }}
+                <label class="text-sm text-slate-700">Compte actif</label>
+            </div>
+            <button type="submit" class="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors">
+                {% if user_edit %}Enregistrer{% else %}Créer l'utilisateur{% endif %}
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

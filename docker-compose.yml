@@ -1,0 +1,60 @@
+services:
+  db:
+    image: mariadb:10.11
+    command: --transaction-isolation=READ-COMMITTED --log-bin=current --binlog-format=ROW
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - nextcloud_db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: seven_cloud_db
+      MYSQL_USER: seven_user
+
+  nextcloud:
+    image: nextcloud:29-apache
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    env_file: .env
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: seven_cloud_db
+      MYSQL_USER: seven_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      NEXTCLOUD_ADMIN_USER: ${NEXTCLOUD_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NEXTCLOUD_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: "localhost 127.0.0.1 django nextcloud host.docker.internal"
+    volumes:
+      - nextcloud_data:/var/www/html
+    depends_on:
+      - db
+
+  django:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    env_file: .env
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      ALLOWED_HOSTS: localhost,127.0.0.1,django
+      NEXTCLOUD_URL: http://nextcloud:80
+      NEXTCLOUD_USER: ${NEXTCLOUD_USER}
+      NEXTCLOUD_PASSWORD: ${NEXTCLOUD_PASSWORD}
+      NEXTCLOUD_ENABLED: ${NEXTCLOUD_ENABLED:-false}
+    volumes:
+      - .:/app
+      - django_media:/app/media
+    depends_on:
+      - nextcloud
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8081"
+
+volumes:
+  nextcloud_db:
+  nextcloud_data:
+  django_media:

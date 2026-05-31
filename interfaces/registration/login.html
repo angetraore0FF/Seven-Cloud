@@ -1,0 +1,293 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Connexion - Seven.AI Cloud Souverain</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body { height: 100%; }
+        body{
+            background:
+                radial-gradient(1200px 700px at 15% -10%, rgba(14,165,233,.30), transparent 58%),
+                radial-gradient(900px 600px at 95% 10%, rgba(249,115,22,.20), transparent 55%),
+                radial-gradient(900px 700px at 40% 105%, rgba(16,185,129,.18), transparent 60%),
+                linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 60%, rgba(248,250,252,1) 100%);
+            color: #0b1220;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .sc-grid{
+            position: relative;
+        }
+        .sc-grid:before{
+            content:"";
+            position:absolute; inset:0;
+            background-image:
+                linear-gradient(to right, rgba(15,23,42,.06) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(15,23,42,.05) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: radial-gradient(80% 70% at 55% 25%, rgba(0,0,0,1), rgba(0,0,0,.35) 55%, transparent 85%);
+            pointer-events:none;
+            opacity:.55;
+        }
+        .sc-card{
+            background: rgba(255,255,255,.82);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(15,23,42,.12);
+            box-shadow: 0 22px 60px rgba(2,6,23,.14);
+        }
+    </style>
+</head>
+<body class="h-full">
+    <div class="sc-grid flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+        
+        <!-- En-tête avec logo -->
+        <div class="sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="flex justify-center">
+                <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-400 to-emerald-400 flex items-center justify-center shadow-lg">
+                    <span class="text-3xl font-bold text-white">7</span>
+                </div>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-slate-900">
+                Seven<span class="text-blue-600">.AI</span>
+            </h2>
+            <p class="mt-2 text-center text-sm text-slate-600">
+                Cloud Souverain pour les PME Ivoiriennes
+            </p>
+        </div>
+
+        <!-- Formulaire de connexion -->
+        <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+            <div class="sc-card px-6 py-8 rounded-2xl">
+                
+                <!-- Messages d'erreur -->
+                {% if form.errors %}
+                <div class="rounded-xl bg-red-50 border border-red-200 p-4 mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Erreur d'authentification</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p>Nom d'utilisateur ou mot de passe incorrect. Veuillez réessayer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if next %}
+                    {% if user.is_authenticated %}
+                    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-amber-700">
+                                    Votre compte n'a pas accès à cette page. Connectez-vous avec un compte autorisé.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+                <form class="space-y-6" action="{% url 'login' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ next }}">
+
+                    <!-- Champ Nom d'utilisateur -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-slate-700 mb-2">
+                            Nom d'utilisateur
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                </svg>
+                            </div>
+                            <input 
+                                type="text" 
+                                name="username" 
+                                id="username"
+                                value=""
+                                class="block w-full rounded-xl border border-slate-300 pl-10 pr-3 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                placeholder="Entrez votre nom d'utilisateur"
+                                required
+                                autocomplete="username"
+                            >
+                        </div>
+                    </div>
+
+                    <!-- Champ Mot de passe -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-slate-700 mb-2">
+                            Mot de passe
+                        </label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                </svg>
+                            </div>
+                            <input 
+                                type="password" 
+                                name="password" 
+                                id="password"
+                                class="block w-full rounded-xl border border-slate-300 pl-10 pr-12 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                placeholder="••••••••"
+                                required
+                                autocomplete="current-password"
+                            >
+                            <button 
+                                type="button" 
+                                onclick="togglePassword('password')" 
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            >
+                                <svg class="h-5 w-5 text-slate-400 hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="eye-icon-password">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Options supplémentaires -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                name="remember_me" 
+                                id="remember-me"
+                                class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                            >
+                            <label for="remember-me" class="ml-2 block text-sm text-slate-600">
+                                Se souvenir de moi
+                            </label>
+                        </div>
+                        <div class="text-sm">
+                            <a href="{% url 'password_reset' %}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+                                Mot de passe oublié ?
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Bouton de connexion -->
+                    <button 
+                        type="submit" 
+                        class="w-full flex justify-center items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:from-blue-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300"
+                    >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Se connecter
+                    </button>
+                </form>
+
+                <!-- Séparateur -->
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-slate-200"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="bg-white px-4 text-slate-500">Ou</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lien vers inscription -->
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-slate-600">
+                        Pas encore de compte ? 
+                        <a href="{% url 'register' %}" class="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+                            Créer un compte PME
+                        </a>
+                    </p>
+                </div>
+
+                <!-- Badge de sécurité -->
+                <div class="mt-8 flex justify-center">
+                    <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 border border-emerald-200">
+                        <svg class="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        <span class="text-xs font-medium text-emerald-700">
+                            Connexion sécurisée • Chiffrement AES-256
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Pied de page -->
+        <div class="mt-8 text-center">
+            <p class="text-xs text-slate-400">
+                &copy; {% now "Y" %} Seven.AI - Cloud Souverain Côte d'Ivoire. Tous droits réservés.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Fonction pour afficher/masquer le mot de passe
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById('eye-icon-' + inputId);
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                `;
+            } else {
+                input.type = 'password';
+                icon.innerHTML = `
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                `;
+            }
+        }
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>

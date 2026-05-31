@@ -1,0 +1,229 @@
+{% extends 'user/base.html' %}
+
+{% block title %}Seven.AI - Mes fichiers{% endblock %}
+{% block page_title %}Mes fichiers{% endblock %}
+{% block page_subtitle %}Gérez, partagez et organisez vos documents{% endblock %}
+
+{% block content %}
+<div class="rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl p-4 shadow-[0_22px_60px_rgba(2,6,23,.12)] mb-4">
+    {% include 'user/_storage_bars.html' %}
+</div>
+<div class="flex flex-wrap gap-2 mb-2">
+    <a href="{% url 'user_fichiers' %}" class="rounded-xl px-4 py-2 text-sm font-medium transition-all {% if vue == 'tous' %}bg-gradient-to-r from-brand-600 to-emerald-600 text-white shadow-[0_18px_45px_rgba(14,165,233,.18)]{% else %}bg-white/70 border border-slate-200/60 text-slate-800 hover:bg-white{% endif %}">Tous</a>
+    <a href="{% url 'user_fichiers' %}?vue=favoris" class="rounded-xl px-4 py-2 text-sm font-medium transition-all {% if vue == 'favoris' %}bg-gradient-to-r from-brand-600 to-emerald-600 text-white shadow-[0_18px_45px_rgba(14,165,233,.18)]{% else %}bg-white/70 border border-slate-200/60 text-slate-800 hover:bg-white{% endif %}">Favoris</a>
+    <a href="{% url 'user_fichiers' %}?vue=corbeille" class="rounded-xl px-4 py-2 text-sm font-medium transition-all {% if vue == 'corbeille' %}bg-gradient-to-r from-brand-600 to-emerald-600 text-white shadow-[0_18px_45px_rgba(14,165,233,.18)]{% else %}bg-white/70 border border-slate-200/60 text-slate-800 hover:bg-white{% endif %}">Corbeille</a>
+</div>
+
+{% if collegues %}
+<datalist id="collegues-list">
+    {% for c in collegues %}<option value="{{ c.username }}">{% endfor %}
+</datalist>
+{% endif %}
+{% if vue != 'corbeille' %}
+<div class="rounded-3xl border-2 border-dashed border-slate-300/70 bg-white/65 backdrop-blur-xl p-8 text-center hover:border-brand-400/70 transition-colors shadow-[0_18px_50px_rgba(2,6,23,.10)]">
+    {% if nextcloud_enabled %}
+    <span class="inline-flex mb-4 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1 border border-emerald-200">
+        Stockage Nextcloud actif
+    </span>
+    {% endif %}
+    <form id="upload-form" class="space-y-4 max-w-md mx-auto">
+        {% csrf_token %}
+        <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+        </svg>
+        <div>
+            <input type="file" id="file-input" name="file" required class="text-sm text-slate-600 w-full">
+        </div>
+        <div id="progress-wrap" class="hidden">
+            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-blue-600 transition-all duration-300" style="width:0%"></div>
+            </div>
+            <p id="progress-text" class="text-xs text-slate-500 mt-1">0%</p>
+        </div>
+        <button type="submit" id="upload-btn" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
+            Envoyer le fichier
+        </button>
+        <p class="text-xs text-slate-500">Chiffrement AES-256 · Upload dynamique avec barre de progression</p>
+    </form>
+    <noscript>
+        <form action="{% url 'user_fichiers' %}" method="post" enctype="multipart/form-data" class="mt-4">
+            {% csrf_token %}
+            <input type="hidden" name="upload_file" value="1">
+            <input type="hidden" name="vue" value="{{ vue }}">
+            <input type="file" name="file" required>
+            <button type="submit" class="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-sm text-white">Envoyer</button>
+        </form>
+    </noscript>
+</div>
+{% endif %}
+
+<div class="rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-[0_22px_60px_rgba(2,6,23,.12)] overflow-hidden">
+    <div class="border-b border-slate-200/70 px-6 py-4 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-slate-900">
+            {% if vue == 'corbeille' %}Corbeille{% elif vue == 'favoris' %}Favoris{% else %}Tous les fichiers{% endif %}
+        </h2>
+        <span class="text-sm text-slate-500">{{ fichiers|length }} fichier{{ fichiers|length|pluralize }}</span>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-white/40">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Nom</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Taille</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for file in fichiers %}
+                <tr class="hover:bg-white/40">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <svg class="h-8 w-8 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-slate-900">{{ file.nom }}</p>
+                                {% if file.est_favori and vue != 'favoris' %}
+                                <span class="text-xs text-amber-600">★ Favori</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">{{ file.taille_formatee }}</td>
+                    <td class="px-6 py-4 text-sm text-slate-600">{{ file.date_upload|date:"d/m/Y H:i" }}</td>
+                    <td class="px-6 py-4">
+                        {% if file.chiffre %}
+                        <span class="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">AES-256</span>
+                        {% else %}
+                        <span class="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Non chiffré</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-end flex-wrap gap-2">
+                            {% if vue == 'corbeille' %}
+                            <form method="post" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="file_id" value="{{ file.pk }}">
+                                <input type="hidden" name="vue" value="{{ vue }}">
+                                <button type="submit" name="restore_file" class="text-sm text-emerald-600 hover:underline">Restaurer</button>
+                            </form>
+                            <form method="post" class="inline" onsubmit="return confirm('Supprimer définitivement ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="file_id" value="{{ file.pk }}">
+                                <input type="hidden" name="vue" value="{{ vue }}">
+                                <button type="submit" name="delete_permanent" class="text-sm text-red-600 hover:underline">Supprimer</button>
+                            </form>
+                            {% else %}
+                            <form method="post" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="file_id" value="{{ file.pk }}">
+                                <input type="hidden" name="vue" value="{{ vue }}">
+                                <button type="submit" name="toggle_favori" class="text-sm text-amber-600 hover:underline">
+                                    {% if file.est_favori %}Retirer ★{% else %}Favori ☆{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" class="inline flex items-center gap-1">
+                                {% csrf_token %}
+                                <input type="hidden" name="file_id" value="{{ file.pk }}">
+                                <input type="hidden" name="vue" value="{{ vue }}">
+                                <input type="text" name="share_username" list="collegues-list" placeholder="utilisateur" class="user-input !w-28 !py-1 !text-xs" autocomplete="off">
+                                <button type="submit" name="share_file" class="text-sm text-blue-600 hover:underline">Partager</button>
+                            </form>
+                            <form method="post" class="inline" onsubmit="return confirm('Mettre à la corbeille ?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="file_id" value="{{ file.pk }}">
+                                <input type="hidden" name="vue" value="{{ vue }}">
+                                <button type="submit" name="delete_file" class="text-sm text-red-600 hover:underline">Corbeille</button>
+                            </form>
+                            {% if file.fichier or file.est_sur_nextcloud %}
+                            <a href="{% url 'telecharger_fichier' file.pk %}" class="text-sm text-slate-600 hover:underline">Télécharger</a>
+                            {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-sm text-slate-500">Aucun fichier dans cette vue</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const form = document.getElementById('upload-form');
+    if (!form) return;
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('file-input');
+        const file = fileInput && fileInput.files[0];
+        if (!file) return;
+        const btn = document.getElementById('upload-btn');
+        const wrap = document.getElementById('progress-wrap');
+        const bar = document.getElementById('progress-bar');
+        const text = document.getElementById('progress-text');
+        const formData = new FormData();
+        formData.append('file', file);
+        const csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+        const csrfToken = (csrfInput && csrfInput.value) || getCookie('csrftoken');
+        if (csrfToken) formData.append('csrfmiddlewaretoken', csrfToken);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '{% url "api_upload_fichier" %}');
+        if (csrfToken) xhr.setRequestHeader('X-CSRFToken', csrfToken);
+        btn.disabled = true;
+        wrap.classList.remove('hidden');
+        xhr.upload.onprogress = function(ev) {
+            if (ev.lengthComputable) {
+                const pct = Math.round((ev.loaded / ev.total) * 100);
+                bar.style.width = pct + '%';
+                text.textContent = pct + '%';
+            }
+        };
+        function refreshStorage(s) {
+            if (!s) return;
+            const ul = document.querySelector('[data-storage-user-label]');
+            const ub = document.querySelector('[data-storage-user-bar]');
+            if (ul) ul.textContent = s.used_label + ' / ' + s.quota_gb + ' Go (' + s.pourcentage + ' %)';
+            if (ub) ub.style.width = Math.min(100, s.pourcentage) + '%';
+            const pl = document.querySelector('[data-storage-pme-label]');
+            const pb = document.querySelector('[data-storage-pme-bar]');
+            if (pl && s.pme_used_label) pl.textContent = s.pme_used_label + ' / ' + s.pme_quota_gb + ' Go (' + s.pme_pourcentage + ' %)';
+            if (pb && s.pme_pourcentage != null) pb.style.width = Math.min(100, s.pme_pourcentage) + '%';
+        }
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    refreshStorage(data.storage);
+                } catch (err) {}
+                window.location.href = '{% url "user_fichiers" %}?vue={{ vue }}';
+            } else {
+                let msg = 'Erreur lors de l\'upload';
+                if (xhr.status === 403) msg = 'Erreur CSRF (403) — recharge la page puis réessaie.';
+                try { msg = JSON.parse(xhr.responseText).error || msg; } catch (err) {}
+                alert(msg);
+                btn.disabled = false;
+            }
+        };
+        xhr.onerror = function() {
+            alert('Erreur réseau');
+            btn.disabled = false;
+        };
+        xhr.send(formData);
+    });
+})();
+</script>
+{% endblock %}

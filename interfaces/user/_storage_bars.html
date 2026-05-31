@@ -1,0 +1,25 @@
+<div class="space-y-4" id="storage-widget">
+    <div>
+        <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium text-slate-700">Votre espace</span>
+            <span class="text-slate-600" data-storage-user-label>{{ used_storage_label }} / {{ quota_gb }} Go ({{ pourcentage_utilise }} %)</span>
+        </div>
+        <div class="overflow-hidden h-2.5 rounded-full bg-slate-100">
+            <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-300" data-storage-user-bar style="width: {{ pourcentage_utilise }}%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Reste : {{ reste_label }}</p>
+    </div>
+    {% if pme_nom %}
+    <div>
+        <div class="flex justify-between text-sm mb-1">
+            <span class="font-medium text-slate-700">Espace {{ pme_nom }} (entreprise)</span>
+            <span class="text-slate-600" data-storage-pme-label>{{ pme_used_label }} / {{ pme_quota_gb }} Go ({{ pme_pourcentage }} %)</span>
+        </div>
+        <div class="overflow-hidden h-2.5 rounded-full bg-slate-100">
+            <div class="h-full rounded-full bg-gradient-to-r from-violet-500 to-blue-500 transition-all duration-300" data-storage-pme-bar style="width: {{ pme_pourcentage }}%"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Reste entreprise : {{ pme_reste_label }} — dossier Nextcloud : SevenCloud/{{ pme_slug }}/</p>
+    </div>
+    {% endif %}
+    <p class="text-xs text-slate-400">Calculé depuis vos fichiers enregistrés (hors corbeille). Nextcloud stocke les fichiers ; Seven Cloud applique les quotas.</p>
+</div>

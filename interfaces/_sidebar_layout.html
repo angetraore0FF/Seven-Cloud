@@ -1,0 +1,147 @@
+<style>
+    :root {
+        --sc-sidebar: #112D4E;
+        --sc-sidebar-hover: #1a3d66;
+        --sc-sidebar-active: rgba(255, 255, 255, 0.14);
+    }
+    #sc-main {
+        padding-left: calc(18rem + 2rem); /* w-72 (18rem) + left-4 (1rem) + gap (1rem) */
+        transition: padding-left 0.3s ease;
+    }
+    body.sc-sidebar-collapsed #sc-main {
+        padding-left: 0;
+    }
+    [data-sc-sidebar] {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    body.sc-sidebar-collapsed [data-sc-sidebar] {
+        transform: translateX(calc(-100% - 1.5rem));
+        opacity: 0;
+        pointer-events: none;
+    }
+    .sc-sidebar-open-btn {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        flex-shrink: 0;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background-color: var(--sc-sidebar);
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(17, 45, 78, 0.35);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    body.sc-sidebar-collapsed .sc-sidebar-open-btn {
+        display: inline-flex;
+    }
+    /* Quand la sidebar est visible : le bouton n'occupe AUCUN espace (ni largeur ni gap) */
+    body:not(.sc-sidebar-collapsed) .sc-sidebar-open-btn {
+        display: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+    }
+    .sc-sidebar-open-btn:hover {
+        background-color: var(--sc-sidebar-hover);
+    }
+    .sc-theme-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(15, 23, 42, 0.14);
+        background: rgba(255, 255, 255, 0.78);
+        color: #0f172a;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .sc-theme-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.95);
+    }
+    body.sc-dark .sc-theme-toggle-btn {
+        border-color: rgba(148, 163, 184, 0.3);
+        background: rgba(30, 41, 59, 0.7);
+        color: #e2e8f0;
+        box-shadow: 0 8px 22px rgba(2, 6, 23, 0.45);
+    }
+    body.sc-dark .sc-theme-toggle-btn:hover {
+        background: rgba(30, 41, 59, 0.9);
+    }
+</style>
+<script>
+(function () {
+    var KEY = 'sc-sidebar-collapsed';
+    var THEME_KEY = 'sc-theme';
+    var sidebar = document.querySelector('[data-sc-sidebar]');
+    var openBtn = document.querySelector('[data-sc-sidebar-open]');
+    var toggles = document.querySelectorAll('[data-sc-sidebar-toggle]');
+    var themeToggles = document.querySelectorAll('[data-theme-toggle]');
+    if (!sidebar) return;
+
+    function setCollapsed(collapsed) {
+        document.body.classList.toggle('sc-sidebar-collapsed', collapsed);
+        toggles.forEach(function (btn) {
+            btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            var label = btn.querySelector('[data-sc-sidebar-toggle-label]');
+            if (label) label.textContent = collapsed ? 'Afficher le menu' : 'Réduire';
+        });
+        try { localStorage.setItem(KEY, collapsed ? '1' : '0'); } catch (e) {}
+    }
+
+    function isCollapsed() {
+        try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; }
+    }
+
+    function preferredTheme() {
+        try {
+            var saved = localStorage.getItem(THEME_KEY);
+            if (saved === 'dark' || saved === 'light') return saved;
+        } catch (e) {}
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function syncThemeButtons(theme) {
+        themeToggles.forEach(function (btn) {
+            var moon = btn.querySelector('[data-theme-icon="moon"]');
+            var sun = btn.querySelector('[data-theme-icon="sun"]');
+            var dark = theme === 'dark';
+            if (moon) moon.classList.toggle('hidden', dark);
+            if (sun) sun.classList.toggle('hidden', !dark);
+            btn.setAttribute('aria-label', dark ? 'Activer le mode clair' : 'Activer le mode sombre');
+            btn.setAttribute('title', dark ? 'Mode clair' : 'Mode sombre');
+        });
+    }
+
+    function applyTheme(theme) {
+        var dark = theme === 'dark';
+        document.body.classList.toggle('sc-dark', dark);
+        document.documentElement.classList.toggle('sc-dark', dark);
+        syncThemeButtons(theme);
+        try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    }
+
+    toggles.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            setCollapsed(!document.body.classList.contains('sc-sidebar-collapsed'));
+        });
+    });
+    if (openBtn) {
+        openBtn.addEventListener('click', function () { setCollapsed(false); });
+    }
+    themeToggles.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            applyTheme(document.body.classList.contains('sc-dark') ? 'light' : 'dark');
+        });
+    });
+    applyTheme(preferredTheme());
+    setCollapsed(isCollapsed());
+})();
+</script>

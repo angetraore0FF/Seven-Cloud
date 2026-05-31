@@ -1,0 +1,65 @@
+{% load avatar_tags %}
+<aside data-sc-sidebar class="fixed top-4 left-4 bottom-4 z-50 flex w-72 flex-col overflow-hidden rounded-[28px] border border-white/20 bg-[#112D4E]/58 text-white shadow-[0_30px_70px_rgba(0,0,0,.45)] backdrop-blur-2xl">
+    <div class="absolute inset-0 bg-[radial-gradient(130%_90%_at_15%_12%,rgba(125,211,252,.22),transparent_58%),radial-gradient(120%_90%_at_85%_86%,rgba(30,80,140,.2),transparent_60%)]"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,45,78,.45)_0%,rgba(17,45,78,.22)_100%)]"></div>
+    <div class="relative flex h-16 items-center gap-2 px-6 border-b border-white/10">
+        <div class="h-8 w-8 rounded-xl bg-gradient-to-br from-brand-300 via-copper-300 to-emerald-300 flex items-center justify-center font-extrabold text-slate-950 shadow-[0_12px_30px_rgba(14,165,233,.25)] ring-1 ring-white/20">7</div>
+        <span class="text-xl font-semibold tracking-tight">Seven<span class="text-brand-200">.AI</span></span>
+    </div>
+
+    <nav class="relative flex-1 space-y-1 px-4 py-6">
+        <a href="{% url 'dashboard_user' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'dashboard' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+            Tableau de bord
+        </a>
+        <a href="{% url 'user_fichiers' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'fichiers' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+            Mes Fichiers
+        </a>
+        <a href="{% url 'user_partages' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'partages' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            Partagés
+        </a>
+        <a href="{% url 'user_parametres' %}" class="group flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium transition-all {% if active_nav == 'parametres' %}bg-white/15 text-white shadow-[0_8px_20px_rgba(0,0,0,.2)]{% else %}text-slate-200/85 hover:bg-white/8 hover:text-white{% endif %}">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            Paramètres
+        </a>
+        <div class="pt-4 mt-4 border-t border-white/15">
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="w-full flex items-center gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium text-slate-300/85 hover:bg-white/8 hover:text-white transition-colors">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Se déconnecter
+                </button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="relative border-t border-white/15 p-4">
+        <div class="flex items-center gap-3">
+            <div class="relative h-10 w-10 overflow-hidden rounded-full ring-2 ring-white/20 bg-white/10 flex items-center justify-center">
+                <img
+                    src="{% if profile.photo %}{{ profile.photo.url }}{% else %}https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff{% endif %}"
+                    alt="{{ user.username }}"
+                    class="h-full w-full object-cover"
+                    onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=112D4E&color=fff';"
+                >
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-white truncate">{{ user.username }}</p>
+                {% if pme_nom %}
+                <p class="text-xs text-slate-300/75 truncate">{{ pme_nom }}</p>
+                {% else %}
+                <p class="text-xs text-slate-300/70 truncate">Aucune PME assignée</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="relative border-t border-white/15 p-3">
+        <button type="button" data-sc-sidebar-toggle aria-expanded="true" class="w-full flex items-center justify-between gap-3 rounded-2xl px-3.5 py-3 text-sm font-medium text-slate-300/85 hover:bg-white/8 hover:text-white transition-colors">
+            <span data-sc-sidebar-toggle-label>Réduire</span>
+            <svg class="h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
+        </button>
+    </div>
+</aside>
