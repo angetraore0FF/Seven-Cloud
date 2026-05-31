@@ -20,6 +20,7 @@ from django.db import transaction
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from .services.fichiers import upload_fichier, delete_fichier_storage
+from .utils.pme import get_or_create_pme
 from .services.nextcloud import NextcloudStorage, NextcloudError, slug_pme
 from .services.quota import stats_stockage_utilisateur, stats_stockage_pme
 from .models import (
@@ -831,12 +832,11 @@ def custom_register(request):
 
                     pme = None
                     if company_name:
-                        pme = PME.objects.create(
-                            nom=company_name,
+                        pme = get_or_create_pme(
+                            company_name,
                             secteur=sector or 'autre',
                             email_contact=email or f'{user.username}@seven.ai',
                             telephone=phone or '',
-                            adresse='',
                         )
 
                     UserProfile.objects.create(

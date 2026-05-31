@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import PasswordChangeForm
 from .models import Fichier, Dossier, UserProfile, PME, DemandeMotDePasse, DemandeAugmentationQuota
+from .utils.pme import normalize_pme_nom
 
 
 class UploadFichierForm(forms.ModelForm):
@@ -103,6 +104,20 @@ class PMEForm(forms.ModelForm):
             'a_repondu': forms.CheckboxInput(attrs={'class': 'admin-checkbox'}),
             'photo': PHOTO_WIDGET,
         }
+
+    def clean_nom(self):
+        nom = self.cleaned_data['nom'].strip()
+        norm = normalize_pme_nom(nom)
+        qs = PME.objects.filter(nom_normalise=norm)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            existing = qs.first()
+            raise forms.ValidationError(
+                f'Une PME « {existing.nom} » existe déjà. '
+                'Rattachez les utilisateurs à celle-ci au lieu d\'en créer une nouvelle.'
+            )
+        return nom
 
 
 class AdminUserForm(forms.ModelForm):

@@ -6,6 +6,12 @@ from django.utils import timezone
 
 class PME(models.Model):
     nom = models.CharField(max_length=200)
+    nom_normalise = models.CharField(
+        max_length=200,
+        unique=True,
+        editable=False,
+        help_text="Nom normalisé pour éviter les doublons (SEVEN AI = SEVEN_AI).",
+    )
     secteur = models.CharField(max_length=100)
     email_contact = models.EmailField()
     telephone = models.CharField(max_length=20)
@@ -25,6 +31,12 @@ class PME(models.Model):
 
     def __str__(self):
         return self.nom
+
+    def save(self, *args, **kwargs):
+        from .utils.pme import normalize_pme_nom
+
+        self.nom_normalise = normalize_pme_nom(self.nom)
+        super().save(*args, **kwargs)
 
     def espace_utilise_octets(self):
         from django.db.models import Sum
