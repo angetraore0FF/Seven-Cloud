@@ -92,6 +92,13 @@ class Reponse(models.Model):
 
 
 class UserProfile(models.Model):
+    MODE_STOCKAGE_LOCAL = 'local'
+    MODE_STOCKAGE_DISTANCE = 'distance'
+    MODE_STOCKAGE_CHOICES = [
+        (MODE_STOCKAGE_LOCAL, 'Local'),
+        (MODE_STOCKAGE_DISTANCE, 'À distance'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     pme = models.ForeignKey(
         PME, on_delete=models.SET_NULL, null=True, blank=True,
@@ -106,6 +113,12 @@ class UserProfile(models.Model):
         ('invite', 'Invité'),
     ], default='employe')
     service = models.CharField(max_length=100, blank=True)
+    mode_stockage = models.CharField(
+        max_length=10,
+        choices=MODE_STOCKAGE_CHOICES,
+        default=MODE_STOCKAGE_DISTANCE,
+        verbose_name="Mode de stockage",
+    )
     deux_facteurs_actif = models.BooleanField(default=False)
     photo = models.ImageField(upload_to='photos/profils/%Y/', blank=True, null=True)
     
@@ -131,6 +144,13 @@ class UserProfile(models.Model):
     def pourcentage_utilise(self):
         from .utils.storage import go_to_bytes, pourcentage
         return pourcentage(self.espace_utilise_octets(), go_to_bytes(self.quota_stockage))
+
+    def utilise_stockage_distance(self):
+        from django.conf import settings
+        return (
+            settings.NEXTCLOUD_ENABLED
+            and self.mode_stockage == self.MODE_STOCKAGE_DISTANCE
+        )
 
 
 class DemandeMotDePasse(models.Model):
@@ -234,6 +254,36 @@ class Dossier(models.Model):
         return count
 
 
+class PartageFichier(models.Model):
+    """Lien de partage entre un fichier et un destinataire, avec mot de passe optionnel."""
+    fichier = models.ForeignKey('Fichier', on_delete=models.CASCADE, related_name='partages')
+    destinataire = models.ForeignKey(User, on_delete=models.CASCADE, related_name='partages_recus')
+    mot_de_passe = models.CharField(max_length=128, blank=True)
+    date_partage = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Partage de fichier"
+        verbose_name_plural = "Partages de fichiers"
+        unique_together = ('fichier', 'destinataire')
+
+    def __str__(self):
+        return f"{self.fichier.nom} → {self.destinataire.username}"
+
+    @property
+    def protege_par_mot_de_passe(self):
+        return bool(self.mot_de_passe)
+
+    def definir_mot_de_passe(self, raw_password):
+        from django.contrib.auth.hashers import make_password
+        self.mot_de_passe = make_password(raw_password) if raw_password else ''
+
+    def verifier_mot_de_passe(self, raw_password):
+        if not self.mot_de_passe:
+            return True
+        from django.contrib.auth.hashers import check_password
+        return check_password(raw_password, self.mot_de_passe)
+
+
 class Fichier(models.Model):
     nom = models.CharField(max_length=255)
     fichier = models.FileField(upload_to='fichiers/%Y/%m/', blank=True)
@@ -247,7 +297,12 @@ class Fichier(models.Model):
     chiffre = models.BooleanField(default=True)
     date_upload = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
-    partage_avec = models.ManyToManyField(User, blank=True, related_name='fichiers_partages')
+    partage_avec = models.ManyToManyField(
+        User,
+        through='PartageFichier',
+        blank=True,
+        related_name='fichiers_partages',
+    )
     est_favori = models.BooleanField(default=False)
     est_corbeille = models.BooleanField(default=False)
     

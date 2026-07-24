@@ -6,14 +6,14 @@ from .quota import verifier_quota_upload
 
 
 def upload_fichier(user, uploaded_file, profile):
-    """Enregistre un fichier localement ou sur Nextcloud selon la configuration."""
+    """Enregistre un fichier localement ou sur Nextcloud selon le mode choisi par l'utilisateur."""
     nom = uploaded_file.name
     taille = uploaded_file.size
     type_mime = getattr(uploaded_file, "content_type", "") or ""
 
     verifier_quota_upload(profile, taille)
 
-    if settings.NEXTCLOUD_ENABLED:
+    if profile.utilise_stockage_distance():
         try:
             remote_path = build_remote_path(user, profile, nom)
             nc = NextcloudStorage()

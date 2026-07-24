@@ -17,7 +17,7 @@ from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST, require_http_methods
 from django.db import transaction
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, Prefetch
 from django.utils import timezone
 from .services.fichiers import upload_fichier, delete_fichier_storage
 from .utils.pme import get_or_create_pme
@@ -25,7 +25,7 @@ from .services.nextcloud import NextcloudStorage, NextcloudError, slug_pme
 from .services.quota import stats_stockage_utilisateur, stats_stockage_pme
 from .models import (
     Fichier, Dossier, UserProfile, PME, Reponse,
-    DemandeMotDePasse, DemandeAugmentationQuota, EmailOTP,
+    DemandeMotDePasse, DemandeAugmentationQuota, EmailOTP, PartageFichier,
 )
 
 logger = logging.getLogger(__name__)
@@ -82,6 +82,7 @@ def _user_context(request, active_nav):
     is_local_network = request.META.get('REMOTE_ADDR') in ['127.0.0.1', '::1', 'localhost']
     pme = profile.pme
     storage = stats_stockage_utilisateur(profile)
+    stockage_distance_actif = profile.utilise_stockage_distance()
     ctx = {
         'user': request.user,
         'profile': profile,
@@ -90,6 +91,9 @@ def _user_context(request, active_nav):
         'pme_slug': slug_pme(pme.nom) if pme else '',
         'active_nav': active_nav,
         'is_local_network': is_local_network,
+        'nextcloud_disponible': settings.NEXTCLOUD_ENABLED,
+        'mode_stockage': profile.mode_stockage,
+        'stockage_distance_actif': stockage_distance_actif,
         'used_storage_gb': profile.espace_utilise(),
         'quota_gb': profile.quota_stockage,
         'pourcentage_utilise': storage['pourcentage_utilise'],
@@ -117,6 +121,42 @@ def _get_user_file(request, user, file_id):
     return get_object_or_404(Fichier, pk=file_id, proprietaire=user)
 
 
+def _get_partage_pour_utilisateur(fichier, user):
+    if fichier.proprietaire_id == user.id:
+        return None
+    return PartageFichier.objects.filter(fichier=fichier, destinataire=user).first()
+
+
+def _partage_session_key(fichier_pk):
+    return f'share_unlock_{fichier_pk}'
+
+
+def _serve_fichier_download(request, fichier):
+    """Retourne la réponse HTTP de téléchargement ou une redirect en cas d'erreur."""
+    if fichier.est_sur_nextcloud and settings.NEXTCLOUD_ENABLED:
+        try:
+            content = NextcloudStorage().download(fichier.nextcloud_path)
+            response = HttpResponse(
+                content,
+                content_type=fichier.type_mime or 'application/octet-stream',
+            )
+            response['Content-Disposition'] = f'attachment; filename="{fichier.nom}"'
+            return response
+        except NextcloudError:
+            messages.error(request, 'Impossible de récupérer le fichier sur Nextcloud.')
+            return redirect('user_fichiers')
+
+    if fichier.fichier:
+        return FileResponse(
+            fichier.fichier.open('rb'),
+            as_attachment=True,
+            filename=fichier.nom,
+        )
+
+    messages.error(request, 'Fichier introuvable.')
+    return redirect('user_fichiers')
+
+
 def _user_can_access_fichier(user, fichier):
     if fichier.proprietaire_id == user.id:
         return True
@@ -131,7 +171,7 @@ def _handle_fichier_post(request, user):
         profile = _ensure_user_profile(user)
         try:
             upload_fichier(user, request.FILES['file'], profile)
-            label = 'sur Nextcloud' if settings.NEXTCLOUD_ENABLED else 'localement'
+            label = 'sur Nextcloud' if profile.utilise_stockage_distance() else 'localement'
             messages.success(request, f'Fichier téléversé et chiffré ({label}).')
         except ValueError as exc:
             messages.error(request, str(exc))
@@ -171,8 +211,24 @@ def _handle_fichier_post(request, user):
         username = request.POST.get('share_username', '').strip()
         target = User.objects.filter(username=username).exclude(pk=user.pk).first()
         if target:
-            fichier.partage_avec.add(target)
-            messages.success(request, f'Fichier partagé avec {username}.')
+            use_password = request.POST.get('share_use_password') == '1'
+            share_password = request.POST.get('share_password', '').strip() if use_password else ''
+            if use_password and not share_password:
+                messages.error(request, 'Veuillez saisir un mot de passe ou décocher l\'option.')
+                return _redirect_fichiers(vue)
+            partage, _ = PartageFichier.objects.get_or_create(
+                fichier=fichier,
+                destinataire=target,
+            )
+            partage.definir_mot_de_passe(share_password)
+            partage.save()
+            if share_password:
+                messages.success(
+                    request,
+                    f'Fichier partagé avec {username} (protégé par mot de passe).',
+                )
+            else:
+                messages.success(request, f'Fichier partagé avec {username}.')
             return redirect('user_partages')
         messages.error(request, 'Utilisateur introuvable.')
         return _redirect_fichiers(vue)
@@ -262,7 +318,6 @@ def user_fichiers(request):
         **_user_context(request, 'fichiers'),
         'fichiers': fichiers,
         'vue': vue,
-        'nextcloud_enabled': settings.NEXTCLOUD_ENABLED,
         'collegues': collegues,
     }
     return render(request, 'user/fichiers.html', context)
@@ -306,33 +361,29 @@ def api_upload_fichier(request):
 @never_cache
 @login_required
 def telecharger_fichier(request, pk):
-    """Téléchargement sécurisé (local ou Nextcloud)."""
+    """Téléchargement sécurisé (local ou Nextcloud), avec mot de passe optionnel sur les partages."""
     fichier = get_object_or_404(Fichier, pk=pk)
     if not _user_can_access_fichier(request.user, fichier):
         raise PermissionDenied
 
-    if fichier.est_sur_nextcloud and settings.NEXTCLOUD_ENABLED:
-        try:
-            content = NextcloudStorage().download(fichier.nextcloud_path)
-            response = HttpResponse(
-                content,
-                content_type=fichier.type_mime or 'application/octet-stream',
-            )
-            response['Content-Disposition'] = f'attachment; filename="{fichier.nom}"'
-            return response
-        except NextcloudError:
-            messages.error(request, 'Impossible de récupérer le fichier sur Nextcloud.')
-            return redirect('user_fichiers')
+    partage = _get_partage_pour_utilisateur(fichier, request.user)
+    session_key = _partage_session_key(fichier.pk)
 
-    if fichier.fichier:
-        return FileResponse(
-            fichier.fichier.open('rb'),
-            as_attachment=True,
-            filename=fichier.nom,
-        )
+    if partage and partage.protege_par_mot_de_passe:
+        if request.method == 'POST':
+            password = request.POST.get('share_password', '')
+            if partage.verifier_mot_de_passe(password):
+                request.session[session_key] = True
+                return _serve_fichier_download(request, fichier)
+            messages.error(request, 'Mot de passe incorrect.')
+        elif not request.session.get(session_key):
+            return render(request, 'user/telecharger_protege.html', {
+                **_user_context(request, 'partages'),
+                'fichier': fichier,
+                'proprietaire': fichier.proprietaire,
+            })
 
-    messages.error(request, 'Fichier introuvable.')
-    return redirect('user_fichiers')
+    return _serve_fichier_download(request, fichier)
 
 
 @never_cache
@@ -350,13 +401,20 @@ def user_partages(request):
     fichiers_recus = (
         Fichier.objects.filter(partage_avec=user, est_corbeille=False)
         .select_related('proprietaire')
+        .prefetch_related(
+            Prefetch(
+                'partages',
+                queryset=PartageFichier.objects.filter(destinataire=user),
+                to_attr='partage_pour_moi',
+            )
+        )
         .order_by('-date_upload')
     )
     fichiers_envoyes = (
         Fichier.objects.filter(proprietaire=user, est_corbeille=False)
         .annotate(nb_partages=Count('partage_avec', distinct=True))
         .filter(nb_partages__gt=0)
-        .prefetch_related('partage_avec')
+        .prefetch_related('partages__destinataire')
         .order_by('-date_upload')
     )
     collegues = []
@@ -378,6 +436,27 @@ def user_partages(request):
 
 @never_cache
 @login_required
+@require_POST
+def api_switch_mode_stockage(request):
+    """Bascule le mode de stockage local / à distance pour l'utilisateur connecté."""
+    profile = _ensure_user_profile(request.user)
+    mode = request.POST.get('mode')
+    if mode not in (UserProfile.MODE_STOCKAGE_LOCAL, UserProfile.MODE_STOCKAGE_DISTANCE):
+        return JsonResponse({'error': 'Mode invalide'}, status=400)
+    if mode == UserProfile.MODE_STOCKAGE_DISTANCE and not settings.NEXTCLOUD_ENABLED:
+        return JsonResponse({'error': 'Nextcloud indisponible'}, status=400)
+    profile.mode_stockage = mode
+    profile.save(update_fields=['mode_stockage'])
+    stockage_distance = profile.utilise_stockage_distance()
+    return JsonResponse({
+        'mode': mode,
+        'label': 'À distance' if stockage_distance else 'Local',
+        'stockage_distance_actif': stockage_distance,
+    })
+
+
+@never_cache
+@login_required
 def user_parametres(request):
     """Paramètres du compte utilisateur"""
     user = request.user
@@ -385,7 +464,10 @@ def user_parametres(request):
 
     account_form = UserAccountForm(instance=user)
     photo_form = ProfilePhotoForm(instance=profile)
-    profile_form = UserProfileSettingsForm(instance=profile)
+    profile_form = UserProfileSettingsForm(
+        instance=profile,
+        nextcloud_disponible=settings.NEXTCLOUD_ENABLED,
+    )
     demande_form = DemandeMotDePasseForm()
     demande_en_attente = DemandeMotDePasse.objects.filter(user=user, traite=False).first()
     demande_quota_form = DemandeAugmentationQuotaForm(quota_actuel=profile.quota_stockage)
@@ -408,7 +490,11 @@ def user_parametres(request):
                 return redirect('user_parametres')
 
         elif 'update_profile' in request.POST:
-            profile_form = UserProfileSettingsForm(request.POST, instance=profile)
+            profile_form = UserProfileSettingsForm(
+                request.POST,
+                instance=profile,
+                nextcloud_disponible=settings.NEXTCLOUD_ENABLED,
+            )
             if profile_form.is_valid():
                 profile_form.save()
                 messages.success(request, 'Profil mis à jour.')

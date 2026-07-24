@@ -186,20 +186,7 @@
                             </button>
                         </form>
                         {% block header_extra %}
-                        {% if is_local_network %}
-                        <div class="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 border border-emerald-200">
-                            <span class="relative flex h-2.5 w-2.5">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                            </span>
-                            <span class="text-xs font-medium text-emerald-700">Accès LAN Local</span>
-                        </div>
-                        {% else %}
-                        <div class="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 border border-amber-200">
-                            <span class="relative flex h-2.5 w-2.5 bg-amber-500 rounded-full"></span>
-                            <span class="text-xs font-medium text-amber-700">Accès Distant</span>
-                        </div>
-                        {% endif %}
+                        {% include 'user/_mode_stockage_toggle.html' %}
                         {% endblock %}
                     </div>
                 </div>

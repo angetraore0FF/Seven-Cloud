@@ -220,13 +220,32 @@ class UserPasswordForm(PasswordChangeForm):
 class UserProfileSettingsForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ['service']
+        fields = ['service', 'mode_stockage']
         widgets = {
             'service': forms.TextInput(attrs={
                 'class': USER_INPUT,
                 'placeholder': 'Ex. Comptabilité, RH…',
             }),
+            'mode_stockage': forms.RadioSelect(attrs={'class': 'sc-mode-stockage-radio'}),
         }
+        labels = {
+            'mode_stockage': 'Mode de stockage des fichiers',
+        }
+
+    def __init__(self, *args, nextcloud_disponible=True, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.nextcloud_disponible = nextcloud_disponible
+        if not nextcloud_disponible:
+            self.fields['mode_stockage'].choices = [
+                (UserProfile.MODE_STOCKAGE_LOCAL, 'Local (Nextcloud indisponible)'),
+            ]
+            self.fields['mode_stockage'].disabled = True
+
+    def clean_mode_stockage(self):
+        mode = self.cleaned_data['mode_stockage']
+        if mode == UserProfile.MODE_STOCKAGE_DISTANCE and not self.nextcloud_disponible:
+            raise forms.ValidationError('Le stockage à distance nécessite Nextcloud.')
+        return mode
 
 
 class DemandeMotDePasseForm(forms.ModelForm):

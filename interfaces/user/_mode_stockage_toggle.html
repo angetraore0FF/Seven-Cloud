@@ -1,0 +1,70 @@
+<div id="mode-stockage-toggle" class="inline-flex items-center rounded-full border border-slate-300/60 bg-white/70 p-0.5 shadow-sm" role="group" aria-label="Mode de stockage">
+    <button type="button" data-mode="local"
+            class="sc-mode-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-all {% if not stockage_distance_actif %}bg-slate-900 text-white shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}"
+            {% if not nextcloud_disponible %}title="Nextcloud indisponible — mode local uniquement"{% endif %}>
+        Local
+    </button>
+    <button type="button" data-mode="distance"
+            class="sc-mode-btn rounded-full px-3 py-1.5 text-xs font-semibold transition-all {% if stockage_distance_actif %}bg-emerald-600 text-white shadow-sm{% else %}text-slate-600 hover:text-slate-900{% endif %}"
+            {% if not nextcloud_disponible %}disabled title="Nextcloud indisponible"{% endif %}>
+        À distance
+    </button>
+</div>
+<script>
+(function() {
+    const toggle = document.getElementById('mode-stockage-toggle');
+    if (!toggle) return;
+    function getCookie(name) {
+        const value = '; ' + document.cookie;
+        const parts = value.split('; ' + name + '=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+    function setActive(mode) {
+        toggle.querySelectorAll('.sc-mode-btn').forEach(function(btn) {
+            const active = btn.dataset.mode === mode;
+            const isLocal = btn.dataset.mode === 'local';
+            btn.classList.remove('bg-slate-900', 'bg-emerald-600', 'text-white', 'shadow-sm', 'text-slate-600', 'hover:text-slate-900');
+            if (active) {
+                btn.classList.add('text-white', 'shadow-sm', isLocal ? 'bg-slate-900' : 'bg-emerald-600');
+            } else {
+                btn.classList.add('text-slate-600', 'hover:text-slate-900');
+            }
+        });
+    }
+    toggle.addEventListener('click', function(e) {
+        const btn = e.target.closest('.sc-mode-btn');
+        if (!btn || btn.disabled) return;
+        const mode = btn.dataset.mode;
+        const csrf = getCookie('csrftoken');
+        const body = new URLSearchParams({ mode: mode });
+        fetch('{% url "api_switch_mode_stockage" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrf,
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: body.toString(),
+        }).then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+          .then(function(res) {
+              if (!res.ok) {
+                  alert(res.data.error || 'Impossible de changer le mode');
+                  return;
+              }
+              setActive(res.data.mode);
+              document.querySelectorAll('[data-mode-stockage-badge]').forEach(function(el) {
+                  el.textContent = res.data.stockage_distance_actif
+                      ? 'Stockage à distance (Nextcloud)'
+                      : 'Stockage local';
+                  el.classList.toggle('bg-emerald-50', res.data.stockage_distance_actif);
+                  el.classList.toggle('text-emerald-700', res.data.stockage_distance_actif);
+                  el.classList.toggle('border-emerald-200', res.data.stockage_distance_actif);
+                  el.classList.toggle('bg-slate-50', !res.data.stockage_distance_actif);
+                  el.classList.toggle('text-slate-700', !res.data.stockage_distance_actif);
+                  el.classList.toggle('border-slate-200', !res.data.stockage_distance_actif);
+              });
+          })
+          .catch(function() { alert('Erreur réseau'); });
+    });
+})();
+</script>

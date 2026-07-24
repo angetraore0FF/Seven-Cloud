@@ -21,9 +21,13 @@
 {% endif %}
 {% if vue != 'corbeille' %}
 <div class="rounded-3xl border-2 border-dashed border-slate-300/70 bg-white/65 backdrop-blur-xl p-8 text-center hover:border-brand-400/70 transition-colors shadow-[0_18px_50px_rgba(2,6,23,.10)]">
-    {% if nextcloud_enabled %}
-    <span class="inline-flex mb-4 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1 border border-emerald-200">
-        Stockage Nextcloud actif
+    {% if stockage_distance_actif %}
+    <span data-mode-stockage-badge class="inline-flex mb-4 rounded-full bg-emerald-50 text-emerald-700 text-xs font-medium px-3 py-1 border border-emerald-200">
+        Stockage à distance (Nextcloud)
+    </span>
+    {% else %}
+    <span data-mode-stockage-badge class="inline-flex mb-4 rounded-full bg-slate-50 text-slate-700 text-xs font-medium px-3 py-1 border border-slate-200">
+        Stockage local
     </span>
     {% endif %}
     <form id="upload-form" class="space-y-4 max-w-md mx-auto">
@@ -124,11 +128,16 @@
                                     {% if file.est_favori %}Retirer ★{% else %}Favori ☆{% endif %}
                                 </button>
                             </form>
-                            <form method="post" class="inline flex items-center gap-1">
+                            <form method="post" class="inline flex flex-wrap items-center gap-1">
                                 {% csrf_token %}
                                 <input type="hidden" name="file_id" value="{{ file.pk }}">
                                 <input type="hidden" name="vue" value="{{ vue }}">
-                                <input type="text" name="share_username" list="collegues-list" placeholder="utilisateur" class="user-input !w-28 !py-1 !text-xs" autocomplete="off">
+                                <input type="text" name="share_username" list="collegues-list" placeholder="utilisateur" class="user-input !w-28 !py-1 !text-xs" autocomplete="off" required>
+                                <label class="inline-flex items-center gap-1 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" name="share_use_password" value="1" class="share-pwd-toggle rounded border-slate-300">
+                                    Mot de passe
+                                </label>
+                                <input type="password" name="share_password" placeholder="mot de passe" class="share-pwd-field user-input !w-28 !py-1 !text-xs hidden" autocomplete="new-password">
                                 <button type="submit" name="share_file" class="text-sm text-blue-600 hover:underline">Partager</button>
                             </form>
                             <form method="post" class="inline" onsubmit="return confirm('Mettre à la corbeille ?');">
@@ -156,6 +165,20 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+(function() {
+    document.querySelectorAll('.share-pwd-toggle').forEach(function(toggle) {
+        const form = toggle.closest('form');
+        const field = form && form.querySelector('.share-pwd-field');
+        if (!field) return;
+        toggle.addEventListener('change', function() {
+            field.classList.toggle('hidden', !toggle.checked);
+            field.required = toggle.checked;
+            if (!toggle.checked) field.value = '';
+        });
+    });
+})();
+</script>
 <script>
 (function() {
     const form = document.getElementById('upload-form');

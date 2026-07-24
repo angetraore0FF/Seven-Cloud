@@ -126,8 +126,46 @@
                 <label class="block text-sm font-medium text-slate-700 mb-1">Service / département</label>
                 {{ profile_form.service }}
             </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">{{ profile_form.mode_stockage.label }}</label>
+                <div class="space-y-2">
+                    {% for radio in profile_form.mode_stockage %}
+                    <label class="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                        {{ radio.tag }}
+                        <span>{{ radio.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if not nextcloud_disponible %}
+                <p class="text-xs text-amber-600 mt-2">Le mode à distance nécessite Nextcloud (actuellement indisponible).</p>
+                {% else %}
+                <p class="text-xs text-slate-500 mt-2">
+                    <strong>Local</strong> : dossier media/ sur le serveur Seven Cloud.
+                    <strong>À distance</strong> : Nextcloud (cloud).
+                </p>
+                {% endif %}
+            </div>
             <button type="submit" class="rounded-xl bg-slate-900/90 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-colors shadow-[0_10px_26px_rgba(15,23,42,.35)]">Enregistrer le profil</button>
         </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-200">
+            <h2 class="sc-settings-title mb-2">Mode de stockage</h2>
+            <p class="text-sm text-slate-600 mb-4">
+                Choisissez où vos <strong>nouveaux fichiers</strong> seront enregistrés.
+                Les fichiers déjà uploadés restent à leur emplacement actuel.
+            </p>
+            {% if not nextcloud_disponible %}
+            <div class="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800 mb-4">
+                Nextcloud n'est pas disponible — seul le stockage local est actif.
+            </div>
+            {% endif %}
+            <div class="flex flex-wrap gap-3 mb-2">
+                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border {% if stockage_distance_actif %}bg-emerald-50 text-emerald-700 border-emerald-200{% else %}bg-slate-50 text-slate-700 border-slate-200{% endif %}">
+                    Mode actuel : {% if stockage_distance_actif %}À distance{% else %}Local{% endif %}
+                </span>
+            </div>
+            <p class="text-xs text-slate-500">Utilisez le switch <strong>Local / À distance</strong> en haut à droite pour changer rapidement.</p>
+        </div>
 
         <div class="mt-8 pt-6 border-t border-slate-200">
             <h2 class="sc-settings-title mb-2">Quota de stockage</h2>

@@ -21,7 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from survey.views import (
     router_dashboard, dashboard_user, user_fichiers, user_partages, user_parametres,
-    api_upload_fichier, telecharger_fichier,
+    api_upload_fichier, api_switch_mode_stockage, telecharger_fichier,
     dashboard_admin, admin_pme, admin_utilisateurs, admin_securite, admin_parametres,
     custom_login, custom_register, custom_logout,
     verify_signup_otp, verify_login_otp, resend_otp,
@@ -38,6 +38,7 @@ urlpatterns = [
     path("dashboard/", dashboard_user, name="dashboard_user"),
     path("dashboard/fichiers/", user_fichiers, name="user_fichiers"),
     path("api/fichiers/upload/", api_upload_fichier, name="api_upload_fichier"),
+    path("api/mode-stockage/", api_switch_mode_stockage, name="api_switch_mode_stockage"),
     path("fichiers/<int:pk>/telecharger/", telecharger_fichier, name="telecharger_fichier"),
     path("dashboard/partages/", user_partages, name="user_partages"),
     path("dashboard/parametres/", user_parametres, name="user_parametres"),
